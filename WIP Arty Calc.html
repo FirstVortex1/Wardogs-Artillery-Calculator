@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vortex's Fancy Vibe Coded Artillery Calculator</title>
+<style>
+  :root {
+    --bg: #181a22;
+    --card-bg: #222531;
+    --field-bg: #13141c;
+    --border: #333748;
+    --text-light: #e1e4ee;
+    --text-muted: #8289a0;
+    --accent-blue: #7a8ff6;
+    --accent-cyan: #00d2ff;
+    --cyan-border: #0096c7;
+
+    --btn-gray: #404452;
+    --btn-gray-hover: #4f5466;
+    --btn-red: #c52828;
+    --btn-red-hover: #db3232;
+    --btn-green: #2e7d32;
+    --btn-green-hover: #3b963e;
+
+    --range-in: #4ade80;
+    --range-out: #ef4444;
+
+    --readout-bg: #12131a;
+    --readout-border: #2f3448;
+    --disp-bg: #0f1118;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text-light);
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 13px;
+  }
+
+  h1.title {
+    text-align: center;
+    color: var(--accent-blue);
+    font-size: 16px;
+    font-weight: bold;
+    margin: 10px 0 6px 0;
+    letter-spacing: 0.5px;
+  }
+
+  .main-container {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 8px;
+    padding: 0 8px 8px 8px;
+  }
+
+  /* --- Generic card / chrome --- */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .section-label {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--text-light);
+  }
+  .section-label.cyan { color: var(--accent-cyan); }
+
+  .field-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: var(--field-bg);
+    color: var(--text-light);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    padding: 5px 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  input[type="text"]:focus { outline: 1px solid var(--accent-blue); }
+  input[type="text"].no-highlight { border: 1px solid #4a4f63; }
+
+  .value-large {
+    font-size: 19px;
+    font-weight: bold;
+    color: var(--text-light);
+  }
+
+  .indicator-label {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--text-muted);
+    margin-left: 8px;
+  }
+
+  /* --- Buttons --- */
+  button {
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    color: var(--text-light);
+    font-weight: bold;
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  button.btn-gray { background: var(--btn-gray); }
+  button.btn-gray:hover { background: var(--btn-gray-hover); }
+  button.btn-red { background: var(--btn-red); }
+  button.btn-red:hover { background: var(--btn-red-hover); }
+  button.btn-green { background: var(--btn-green); }
+  button.btn-green:hover { background: var(--btn-green-hover); }
+  button.btn-small { font-size: 11px; padding: 5px 6px; }
+  button.btn-tall { padding-top: 12px; padding-bottom: 12px; }
+  button.btn-full { width: 100%; }
+  button:disabled { opacity: 0.5; cursor: default; }
+
+  .paste-row { display: flex; }
+  .paste-row input[type="text"] { flex: 1; }
+
+  /* --- Miss log sidebar --- */
+  #missSidebar {
+    width: 260px;
+    flex-shrink: 0;
+    display: none;
+  }
+  #missSidebar.visible { display: flex; }
+
+  .sidebar-header { padding: 8px 10px 4px 10px; }
+  .sidebar-section-header { padding: 6px 10px 2px 10px; }
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    background: var(--field-bg);
+    margin: 0 8px 2px 8px;
+    padding: 2px 4px;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--accent-cyan);
+  }
+
+  #missLogList {
+    margin: 0 8px 4px 8px;
+    height: 130px;
+    overflow-y: auto;
+    background: var(--field-bg);
+    border: 1px solid var(--border);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+    white-space: pre;
+  }
+  #missLogList div { padding: 1px 4px; color: var(--text-light); }
+
+  #plotWrap {
+    flex: 1;
+    margin: 0 8px 8px 8px;
+    min-height: 230px;
+    display: flex;
+  }
+  #plotCanvas {
+    flex: 1;
+    background: var(--field-bg);
+    border: 1px solid var(--border);
+    width: 100%;
+    height: 100%;
+  }
+
+  /* --- Center column --- */
+  #centerColumn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .setup-card { flex: 1; }
+  .setup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 10px 2px 10px;
+  }
+  .setup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2px 0;
+    padding: 0 2px 6px 2px;
+  }
+  .setup-grid .cell { padding: 2px 4px; }
+
+  .readout-card {
+    background: var(--readout-bg) !important;
+    border-color: var(--readout-border) !important;
+  }
+  .readout-header { padding: 4px 10px 2px 10px; }
+  .readout-content {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px 4px 10px;
+  }
+  .disp-box {
+    background: var(--disp-bg);
+    border: 1px solid var(--cyan-border);
+    margin: 4px 8px 6px 8px;
+    padding: 6px 10px;
+  }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; row-gap: 2px; }
+  .stats-grid .stat-label { color: var(--text-muted); font-size: 13px; font-weight: bold; }
+  .stats-grid .stat-value { color: var(--text-light); font-size: 19px; font-weight: bold; text-align: right; }
+
+  .spotter-card { flex: 1; }
+  .spotter-header { padding: 4px 10px 2px 10px; }
+  .spotter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 0;
+    padding: 0 2px;
+  }
+  .spotter-grid .cell { padding: 2px 4px; }
+  .spotter-buttons { padding: 6px 10px; }
+  .spotter-row { display: flex; gap: 6px; }
+  .spotter-row button { flex: 1; }
+
+  /* --- Right sidebars --- */
+  #rightContainer { display: flex; flex-direction: row; gap: 6px; flex-shrink: 0; }
+  #savedSidebar, #defaultsSidebar {
+    width: 280px;
+    flex-shrink: 0;
+  }
+
+  .name-frame { margin: 0 10px 6px 10px; }
+  .list-box {
+    margin: 0 8px 6px 8px;
+    flex: 1;
+    min-height: 160px;
+    overflow-y: auto;
+    background: var(--field-bg);
+    border: 1px solid var(--border);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+  }
+  .list-box .list-row { padding: 3px 4px; cursor: pointer; color: var(--text-light); white-space: nowrap; }
+  .list-box .list-row:hover { background: #2b2f3f; }
+  .list-box .list-row.selected { background: var(--btn-gray); }
+
+  .btn-box { margin: 0 8px 8px 8px; display: flex; flex-direction: column; gap: 3px; }
+  .btn-box .btn-row { display: flex; gap: 4px; }
+  .btn-box .btn-row button { flex: 1; }
+
+  select {
+    width: 100%;
+    background: var(--field-bg);
+    color: var(--text-light);
+    border: 1px solid var(--border);
+    padding: 4px;
+    font-family: inherit;
+    font-size: 13px;
+  }
+
+  /* --- Modal (manual add dialog) --- */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+  .modal-overlay.visible { display: flex; }
+  .modal-box {
+    background: var(--card-bg);
+    width: 320px;
+    padding: 12px 16px 16px 16px;
+    border: 1px solid var(--border);
+  }
+  .modal-box h2 {
+    text-align: center;
+    color: var(--accent-cyan);
+    font-size: 13px;
+    margin: 0 0 10px 0;
+  }
+  .modal-box .field-label { margin-top: 6px; }
+
+  .hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 0 10px 8px 10px;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+
+<h1 class="title">VORTEX'S FANCY VIBE CODED ARTILLERY CALCULATOR</h1>
+
+<div class="main-container">
+
+  <!-- LEFT: Shot Error Log + Impact Plotter -->
+  <div id="missSidebar" class="card">
+    <div class="sidebar-header">
+      <span class="section-label cyan">🎯 SHOT ERROR LOG</span>
+    </div>
+    <div class="divider" style="margin:0 10px 6px 10px;"></div>
+
+    <div class="table-header">
+      <span>Shot #</span>
+      <span>Error Dist (m)</span>
+    </div>
+    <div id="missLogList"></div>
+
+    <div class="sidebar-section-header">
+      <span class="section-label cyan">📍 IMPACT PLOTTER (TO SCALE)</span>
+    </div>
+    <div class="divider" style="margin:0 10px 6px 10px;"></div>
+
+    <div id="plotWrap">
+      <canvas id="plotCanvas"></canvas>
+    </div>
+  </div>
+
+  <!-- CENTER: Setup, Readout, Spotter -->
+  <div id="centerColumn">
+
+    <!-- 1. Setup & Target Parameters -->
+    <div class="card setup-card">
+      <div class="setup-header">
+        <span class="section-label">1. Setup &amp; Target Parameters</span>
+        <span>
+          <span id="lblMortar" class="indicator-label">Mortar</span>
+          <span id="lblSph2" class="indicator-label">SPH-2</span>
+        </span>
+      </div>
+      <div class="divider" style="margin:0 10px 4px 10px;"></div>
+
+      <div class="setup-grid">
+        <div class="cell" style="grid-column:1; grid-row:1;">
+          <label class="field-label">Quick Paste Gunner</label>
+          <div class="paste-row">
+            <input type="text" id="gunPaste" placeholder="e.g. x82.29, y76.15">
+          </div>
+        </div>
+        <div class="cell" style="grid-column:2; grid-row:1;">
+          <label class="field-label">Quick Paste Target</label>
+          <div class="paste-row">
+            <input type="text" id="targetPaste" placeholder="e.g. x84.50, y78.10">
+          </div>
+        </div>
+        <div class="cell" style="grid-column:3; grid-row:1;">
+          <label class="field-label">Desired AOE Diameter (m)</label>
+          <input type="text" id="aoeDist" value="30">
+        </div>
+
+        <div class="cell" style="grid-column:1; grid-row:2;">
+          <label class="field-label">Gunner X</label>
+          <input type="text" id="gunX">
+        </div>
+        <div class="cell" style="grid-column:2; grid-row:2;">
+          <label class="field-label">Target X</label>
+          <input type="text" id="targetX">
+        </div>
+        <div class="cell" style="grid-column:3; grid-row:2;">
+          <!-- Empty grid space where Clipboard Monitor used to be -->
+        </div>
+
+        <div class="cell" style="grid-column:1; grid-row:3;">
+          <label class="field-label">Gunner Y</label>
+          <input type="text" id="gunY">
+        </div>
+        <div class="cell" style="grid-column:2; grid-row:3;">
+          <label class="field-label">Target Y</label>
+          <input type="text" id="targetY">
+        </div>
+        <div class="cell" style="grid-column:3; grid-row:3;">
+          <label class="field-label">Reset</label>
+          <button class="btn-red btn-full btn-small" onclick="clearAllInputs()">🔄 Clear All Fields</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Readout -->
+    <div class="card readout-card">
+      <div class="readout-header">
+        <span class="field-label" style="margin:0;">CURRENT FIRING DATA</span>
+      </div>
+      <div class="readout-content">
+        <span id="lblBearing" class="value-large">Bearing: ---°</span>
+        <span id="lblDistance" class="value-large">Distance: --- m</span>
+      </div>
+
+      <div class="disp-box">
+        <div class="section-label cyan" style="margin-bottom:6px;">AOE BARRAGE DISPERSION SPREAD</div>
+        <div class="stats-grid">
+          <span class="stat-label">Bearing Spread:</span><span id="lblDispBearing" class="stat-value">---</span>
+          <span class="stat-label">Distance Spread:</span><span id="lblDispDistance" class="stat-value">---</span>
+          <span class="stat-label">Target Area Coverage:</span><span id="lblDispArea" class="stat-value">---</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Spotter & Miss Correction -->
+    <div class="card spotter-card">
+      <div class="spotter-header">
+        <span class="section-label">2. Spotter &amp; Miss Correction</span>
+      </div>
+      <div class="divider" style="margin:0 10px 4px 10px;"></div>
+
+      <div class="spotter-grid">
+        <div class="cell" style="grid-column:1 / span 2; grid-row:1;">
+          <label class="field-label">Quick Paste Impact</label>
+          <div class="paste-row">
+            <input type="text" id="impactPaste" placeholder="e.g. x83.10, y77.00">
+          </div>
+        </div>
+        <div class="cell" style="grid-column:1; grid-row:2;">
+          <label class="field-label">Impact X</label>
+          <input type="text" id="impactX">
+        </div>
+        <div class="cell" style="grid-column:2; grid-row:2;">
+          <label class="field-label">Impact Y</label>
+          <input type="text" id="impactY">
+        </div>
+      </div>
+
+      <div class="spotter-buttons">
+        <button class="btn-gray btn-full btn-tall" style="margin-bottom:4px;" onclick="applyMissCorrection()">⚠️ Confirm Miss (Chain Correction)</button>
+        <div class="spotter-row">
+          <button class="btn-green btn-tall" onclick="confirmHit()">🎯 Confirm Hit (Set Target)</button>
+          <button class="btn-red btn-tall" onclick="resetCorrections()">Reset Corrections</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Saved Solutions + Default Locations -->
+  <div id="rightContainer">
+    <div id="savedSidebar" class="card">
+      <div class="sidebar-header">
+        <span class="section-label cyan">📌 SAVED SOLUTIONS</span>
+      </div>
+      <div class="divider" style="margin:0 10px 6px 10px;"></div>
+
+      <div class="name-frame">
+        <label class="field-label">Solution Name</label>
+        <input type="text" id="solutionName" value="Solution 1">
+      </div>
+
+      <div style="margin:0 10px 6px 10px;">
+        <button class="btn-gray btn-full" onclick="saveCurrentSolution()">💾 Save Current Solution</button>
+      </div>
+
+      <div id="savedList" class="list-box"></div>
+
+      <div class="btn-box">
+        <button class="btn-green btn-small" onclick="loadSelectedSolution()">📂 Load Selected</button>
+        <button class="btn-gray btn-small" onclick="copySelectedSolution()">📋 Copy Solution</button>
+        <button class="btn-gray btn-small" onclick="openManualAddDialog()">➕ Add Manual (B/D)</button>
+        <button class="btn-gray btn-small" onclick="renameSelectedSolution()">✏️ Rename Selected</button>
+        <div class="btn-row">
+          <button class="btn-gray btn-small" onclick="deleteSelectedSolution()">❌ Delete</button>
+          <button class="btn-red btn-small" onclick="clearAllSavedSolutions()">🗑️ Clear All</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="defaultsSidebar" class="card">
+      <div class="sidebar-header">
+        <span class="section-label cyan">MAP DEFAULT LOCATIONS</span>
+      </div>
+      <div class="divider" style="margin:0 10px 6px 10px;"></div>
+
+      <div class="name-frame">
+        <label class="field-label">Select Map</label>
+        <select id="mapSelect" onchange="onMapSelected(this.value)"></select>
+      </div>
+
+      <div id="defaultsList" class="list-box"></div>
+      <div class="hint">Loaded from the bundled default_locations.xml. Use "Reload XML Data" to load a different XML file from disk.</div>
+
+      <div class="btn-box">
+        <button class="btn-green" onclick="loadSelectedDefaultLocation()">🎯 Load Default Target</button>
+        <button class="btn-gray btn-small" onclick="reloadXmlData()">🔄 Reload XML Data</button>
+      </div>
+      <input type="file" id="xmlFileInput" accept=".xml" style="display:none">
+    </div>
+  </div>
+
+</div>
+
+<!-- Manual Add Dialog -->
+<div id="manualModal" class="modal-overlay">
+  <div class="modal-box">
+    <h2>Manual Bearing &amp; Distance Entry</h2>
+    <label class="field-label">Solution Name:</label>
+    <input type="text" id="manualName" class="no-highlight">
+    <label class="field-label">Bearing (°):</label>
+    <input type="text" id="manualBearing" class="no-highlight">
+    <label class="field-label">Distance (m):</label>
+    <input type="text" id="manualDistance" class="no-highlight" style="margin-bottom:10px;">
+    <button class="btn-green btn-full" onclick="submitManual()">Save to Table</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================================
+   EMBEDDED DEFAULT LOCATIONS
+   ========================================================================= */
+const EMBEDDED_LOCATIONS = [
+  {map: "Kavkazi", name: "Tower 1", x: "80.54", y: "69.87"},
+  {map: "Kavkazi", name: "Tower 2", x: "77.23", y: "69.97"},
+  {map: "Kavkazi", name: "Tower 3", x: "77.22", y: "73.47"},
+  {map: "Kavkazi", name: "Tower 4", x: "84.63", y: "72.82"},
+  {map: "Kavkazi", name: "Tower 5", x: "82.25", y: "68.39"},
+  {map: "Kavkazi", name: "Main Church", x: "84.46", y: "71.39"},
+  {map: "Kavkazi", name: "Small Church", x: "79.37", y: "67.50"},
+  {map: "Europe", name: "Tower 1", x: "95.85", y: "62.85"},
+  {map: "Europe", name: "Tower 2", x: "100.36", y: "59.25"},
+  {map: "Europe", name: "Tower 3", x: "104.53", y: "63.68"},
+  {map: "Europe", name: "Tower 4", x: "100.68", y: "67.65"},
+  {map: "Europe", name: "Church", x: "101.23", y: "63.00"},
+  {map: "North America", name: "Tower 1", x: "68.60", y: "104.16"},
+  {map: "North America", name: "Tower 2", x: "72.90", y: "105.09"},
+  {map: "North America", name: "Tower 3", x: "70.18", y: "100.18"},
+];
+
+/* =========================================================================
+   BALLISTICS ENGINE
+   ========================================================================= */
+function calculateSolution(gunX, gunY, targetX, targetY, aoeDiameter) {
+  const gx = gunX * 100.0, gy = gunY * 100.0;
+  const tx = targetX * 100.0, ty = targetY * 100.0;
+
+  const dx = tx - gx;
+  const dy = ty - gy;
+
+  const distance = Math.hypot(dx, dy);
+  const bearing = (deg(Math.atan2(dx, dy)) + 360) % 360;
+
+  const radius = aoeDiameter / 2.0;
+  const area = Math.PI * (radius * radius);
+
+  const minDist = Math.max(0.0, distance - radius);
+  const maxDist = distance + radius;
+
+  const deltaBearing = distance > 0 ? deg(Math.atan2(radius, distance)) : 0.0;
+  const minBear = (bearing - deltaBearing + 360) % 360;
+  const maxBear = (bearing + deltaBearing + 360) % 360;
+
+  return {
+    bearing, distance,
+    minBearing: minBear, maxBearing: maxBear, deltaBearing,
+    minDistance: minDist, maxDistance: maxDist,
+    radius, area,
+  };
+}
+function deg(rad) { return rad * 180 / Math.PI; }
+function rad(degv) { return degv * Math.PI / 180; }
+
+/* Pulls the first two numbers out of raw text */
+function parseCoordsString(str) {
+  const numbers = (str.match(/[-+]?\d*\.\d+|\d+/g)) || [];
+  if (numbers.length >= 2) return [numbers[0], numbers[1]];
+  return [null, null];
+}
+
+/* =========================================================================
+   APPLICATION STATE
+   ========================================================================= */
+const state = {
+  offsetX: 0.0,
+  offsetY: 0.0,
+
+  missHistory: [],
+  shotCounter: 0,
+  isMissLogVisible: false,
+  lastAppliedImpact: null,
+
+  savedSolutions: [],
+  solutionCounter: 1,
+
+  currentBearing: null,
+  currentDistance: null,
+
+  xmlLocations: EMBEDDED_LOCATIONS.slice(),
+  availableMaps: [],
+  selectedMap: "",
+
+  selectedSavedIndex: null,
+  selectedDefaultIndex: null,
+};
+
+/* Small DOM helpers */
+const $ = (id) => document.getElementById(id);
+function val(id) { return $(id).value; }
+function setVal(id, v) { $(id).value = v; }
+
+/* =========================================================================
+   XML (DEFAULT LOCATIONS) LOADING
+   ========================================================================= */
+function loadXmlLocations(locations) {
+  state.xmlLocations = locations;
+  const mapsSet = new Set(locations.map((l) => l.map));
+  state.availableMaps = Array.from(mapsSet).sort();
+  if (state.availableMaps.length && !state.selectedMap) {
+    state.selectedMap = state.availableMaps[0];
+  }
+  rebuildMapDropdown();
+  refreshDefaultLocationsList();
+}
+
+function rebuildMapDropdown() {
+  const sel = $("mapSelect");
+  sel.innerHTML = "";
+  const maps = state.availableMaps.length ? state.availableMaps : ["No Maps Found"];
+  for (const m of maps) {
+    const opt = document.createElement("option");
+    opt.value = m;
+    opt.textContent = m;
+    sel.appendChild(opt);
+  }
+  if (maps.includes(state.selectedMap)) {
+    sel.value = state.selectedMap;
+  } else {
+    state.selectedMap = maps[0];
+    sel.value = maps[0];
+  }
+}
+
+function onMapSelected(mapName) {
+  state.selectedMap = mapName;
+  refreshDefaultLocationsList();
+}
+
+function refreshDefaultLocationsList() {
+  const container = $("defaultsList");
+  const matching = state.xmlLocations.filter((l) => l.map === state.selectedMap);
+  state.selectedDefaultIndex = null;
+  container.innerHTML = "";
+  matching.forEach((loc, idx) => {
+    const row = document.createElement("div");
+    row.className = "list-row";
+    row.textContent = `${loc.name} (${loc.x}, ${loc.y})`;
+    row.addEventListener("click", () => selectDefaultRow(idx));
+    row.addEventListener("dblclick", () => loadSelectedDefaultLocation());
+    container.appendChild(row);
+  });
+}
+
+function selectDefaultRow(idx) {
+  state.selectedDefaultIndex = idx;
+  Array.from($("defaultsList").children).forEach((el, i) => {
+    el.classList.toggle("selected", i === idx);
+  });
+}
+
+function reloadXmlData() {
+  $("xmlFileInput").click();
+}
+
+$("xmlFileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const xmlDoc = new DOMParser().parseFromString(reader.result, "text/xml");
+      const nodes = xmlDoc.getElementsByTagName("location");
+      const locations = [];
+      for (const node of nodes) {
+        locations.push({
+          map: node.getAttribute("map") || "Unknown Map",
+          name: node.getAttribute("name") || "Unnamed",
+          x: node.getAttribute("x") || "0",
+          y: node.getAttribute("y") || "0",
+        });
+      }
+      state.selectedMap = "";
+      loadXmlLocations(locations);
+    } catch (err) {
+      alert(`XML Error\n\nFailed to parse ${file.name}:\n${err}`);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+
+function loadSelectedDefaultLocation() {
+  if (state.selectedDefaultIndex === null) return;
+  const matching = state.xmlLocations.filter((l) => l.map === state.selectedMap);
+  const chosen = matching[state.selectedDefaultIndex];
+  if (!chosen) return;
+
+  state.offsetX = 0.0;
+  state.offsetY = 0.0;
+  state.lastAppliedImpact = null;
+  setVal("targetX", chosen.x);
+  setVal("targetY", chosen.y);
+  updateLiveSolution();
+}
+
+/* =========================================================================
+   QUICK PASTE INPUT PARSING
+   ========================================================================= */
+function applyPasteField(fieldId) {
+  const raw = val(fieldId);
+  const [xVal, yVal] = parseCoordsString(raw);
+  if (xVal === null || yVal === null) return;
+
+  if (fieldId === "gunPaste") {
+    setVal("gunX", xVal);
+    setVal("gunY", yVal);
+  } else if (fieldId === "targetPaste") {
+    state.offsetX = 0.0;
+    state.offsetY = 0.0;
+    state.lastAppliedImpact = null;
+    setVal("targetX", xVal);
+    setVal("targetY", yVal);
+  } else if (fieldId === "impactPaste") {
+    setVal("impactX", xVal);
+    setVal("impactY", yVal);
+  }
+  updateLiveSolution();
+}
+
+/* =========================================================================
+   SAVED SOLUTIONS MANAGEMENT
+   ========================================================================= */
+function fmtBearing(b) {
+  return b.toFixed(1).padStart(5, "0");
+}
+function fmtDistance4(d) {
+  return String(Math.round(d)).padStart(4, " ");
+}
+
+function renderSavedList() {
+  const container = $("savedList");
+  container.innerHTML = "";
+  state.savedSolutions.forEach((sol, idx) => {
+    const row = document.createElement("div");
+    row.className = "list-row" + (idx === state.selectedSavedIndex ? " selected" : "");
+    row.textContent = `${sol.name}: ${fmtBearing(sol.bearing)}° | ${fmtDistance4(sol.distance)}m`;
+    row.addEventListener("click", () => selectSavedRow(idx));
+    row.addEventListener("dblclick", () => loadSelectedSolution());
+    container.appendChild(row);
+  });
+}
+
+function selectSavedRow(idx) {
+  state.selectedSavedIndex = idx;
+  renderSavedList();
+}
+
+function saveCurrentSolution() {
+  if (state.currentBearing === null || state.currentDistance === null) {
+    alert("No Solution\n\nCalculate a valid solution first.");
+    return;
+  }
+  let name = val("solutionName").trim();
+  if (!name) name = `Solution ${state.solutionCounter}`;
+
+  state.savedSolutions.push({
+    name,
+    bearing: state.currentBearing,
+    distance: state.currentDistance,
+    targetX: val("targetX"),
+    targetY: val("targetY"),
+  });
+  renderSavedList();
+
+  state.solutionCounter += 1;
+  setVal("solutionName", `Solution ${state.solutionCounter}`);
+}
+
+function loadSelectedSolution() {
+  if (state.selectedSavedIndex === null) return;
+  const data = state.savedSolutions[state.selectedSavedIndex];
+  if (!data) return;
+
+  state.offsetX = 0.0;
+  state.offsetY = 0.0;
+  state.lastAppliedImpact = null;
+  setVal("targetX", data.targetX);
+  setVal("targetY", data.targetY);
+  updateLiveSolution();
+}
+
+async function copySelectedSolution() {
+  if (state.selectedSavedIndex === null) {
+    alert("Selection Required\n\nSelect a saved solution to copy.");
+    return;
+  }
+  const data = state.savedSolutions[state.selectedSavedIndex];
+  const text = `${data.name} - ${fmtBearing(data.bearing)}° | ${Math.round(data.distance)}m`;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    alert("Could not access the clipboard to copy the solution.");
+  }
+}
+
+function renameSelectedSolution() {
+  if (state.selectedSavedIndex === null) {
+    alert("Selection Required\n\nSelect a saved solution to rename.");
+    return;
+  }
+  const data = state.savedSolutions[state.selectedSavedIndex];
+  const newName = prompt("Enter new name for the solution:", data.name);
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (trimmed) {
+    data.name = trimmed;
+    renderSavedList();
+  }
+}
+
+function deleteSelectedSolution() {
+  if (state.selectedSavedIndex === null) {
+    alert("Selection Required\n\nSelect a solution to delete.");
+    return;
+  }
+  state.savedSolutions.splice(state.selectedSavedIndex, 1);
+  state.selectedSavedIndex = null;
+  renderSavedList();
+}
+
+function clearAllSavedSolutions() {
+  if (!state.savedSolutions.length) return;
+  if (confirm("Confirm Clear All\n\nAre you sure you want to delete ALL saved solutions?")) {
+    state.savedSolutions = [];
+    state.selectedSavedIndex = null;
+    state.solutionCounter = 1;
+    setVal("solutionName", "Solution 1");
+    renderSavedList();
+  }
+}
+
+/* --- Manual Add (Bearing/Distance) dialog --- */
+function openManualAddDialog() {
+  if (isNaN(parseFloat(val("gunX"))) || isNaN(parseFloat(val("gunY")))) {
+    alert("Gun Coordinates Missing\n\nPlease set valid Gunner X and Y coordinates first before manual entry.");
+    return;
+  }
+  setVal("manualName", `Manual ${state.solutionCounter}`);
+  setVal("manualBearing", "");
+  setVal("manualDistance", "");
+  $("manualModal").classList.add("visible");
+}
+
+function closeManualModal() {
+  $("manualModal").classList.remove("visible");
+}
+
+function submitManual() {
+  const bVal = parseFloat(val("manualBearing"));
+  const dVal = parseFloat(val("manualDistance"));
+  let nameVal = val("manualName").trim();
+
+  if (isNaN(bVal) || isNaN(dVal)) {
+    alert("Invalid Input\n\nPlease enter valid numerical values for bearing and distance.");
+    return;
+  }
+  if (!nameVal) nameVal = `Manual ${state.solutionCounter}`;
+
+  const gx = parseFloat(val("gunX")) * 100.0;
+  const gy = parseFloat(val("gunY")) * 100.0;
+
+  const bRad = rad(bVal);
+  const dx = dVal * Math.sin(bRad);
+  const dy = dVal * Math.cos(bRad);
+
+  const tx = (gx + dx) / 100.0;
+  const ty = (gy + dy) / 100.0;
+
+  state.savedSolutions.push({
+    name: nameVal,
+    bearing: (bVal + 360) % 360,
+    distance: dVal,
+    targetX: tx.toFixed(2),
+    targetY: ty.toFixed(2),
+  });
+  renderSavedList();
+
+  state.solutionCounter += 1;
+  setVal("solutionName", `Solution ${state.solutionCounter}`);
+  closeManualModal();
+}
+
+/* =========================================================================
+   MISS LOG / SIDEBAR VISIBILITY
+   ========================================================================= */
+function showMissLog() {
+  if (!state.isMissLogVisible) {
+    $("missSidebar").classList.add("visible");
+    state.isMissLogVisible = true;
+  }
+}
+function hideMissLog() {
+  if (state.isMissLogVisible) {
+    $("missSidebar").classList.remove("visible");
+    state.isMissLogVisible = false;
+  }
+}
+function clearMissLog() {
+  $("missLogList").innerHTML = "";
+  state.missHistory = [];
+  state.shotCounter = 0;
+}
+function renderMissLog() {
+  const container = $("missLogList");
+  container.innerHTML = "";
+  state.missHistory.forEach((shot) => {
+    const row = document.createElement("div");
+    row.textContent = ` #${String(shot.shot).padEnd(6)} | ${shot.errorDist.toFixed(1).padStart(8)} m`;
+    container.appendChild(row);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+/* =========================================================================
+   CLEAR ALL INPUTS
+   ========================================================================= */
+function clearAllInputs() {
+  setVal("gunX", ""); setVal("gunY", "");
+  setVal("targetX", ""); setVal("targetY", "");
+  setVal("impactX", ""); setVal("impactY", "");
+
+  setVal("gunPaste", ""); setVal("targetPaste", ""); setVal("impactPaste", "");
+
+  state.offsetX = 0.0;
+  state.offsetY = 0.0;
+  state.lastAppliedImpact = null;
+
+  clearMissLog();
+  hideMissLog();
+
+  updateLiveSolution();
+}
+
+/* =========================================================================
+   CALCULATION & CORRECTION LOGIC
+   ========================================================================= */
+function updateLiveSolution() {
+  const gx = parseFloat(val("gunX"));
+  const gy = parseFloat(val("gunY"));
+  const tx0 = parseFloat(val("targetX"));
+  const ty0 = parseFloat(val("targetY"));
+  const aoe = parseFloat(val("aoeDist"));
+
+  const valid = !isNaN(gx) && !isNaN(gy) && !isNaN(tx0) && !isNaN(ty0) && !isNaN(aoe);
+
+  if (valid) {
+    const tx = tx0 + state.offsetX;
+    const ty = ty0 + state.offsetY;
+    const res = calculateSolution(gx, gy, tx, ty, aoe);
+
+    state.currentBearing = res.bearing;
+    state.currentDistance = res.distance;
+
+    $("lblBearing").textContent = `Bearing: ${res.bearing.toFixed(1)}°`;
+    $("lblDistance").textContent = `Distance: ${res.distance.toFixed(1)} m`;
+
+    $("lblDispBearing").textContent =
+      `${res.minBearing.toFixed(1)}° \u2013 ${res.maxBearing.toFixed(1)}° (±${res.deltaBearing.toFixed(1)}°)`;
+    $("lblDispDistance").textContent =
+      `${res.minDistance.toFixed(0)} m \u2013 ${res.maxDistance.toFixed(0)} m (±${res.radius.toFixed(0)} m)`;
+    $("lblDispArea").textContent = `${res.area.toLocaleString(undefined, {maximumFractionDigits: 0})} m²`;
+
+    const distance = res.distance;
+    setIndicator($("lblSph2"), distance >= 780.0 && distance <= 2629.0);
+    setIndicator($("lblMortar"), distance >= 119.0 && distance <= 684.0);
+  } else {
+    state.currentBearing = null;
+    state.currentDistance = null;
+
+    $("lblBearing").textContent = "Bearing: ---°";
+    $("lblDistance").textContent = "Distance: --- m";
+    $("lblDispBearing").textContent = "0° \u2013 0° (±0°)";
+    $("lblDispDistance").textContent = "0 m \u2013 0 m (±0 m)";
+    $("lblDispArea").textContent = "0 m²";
+
+    $("lblSph2").style.color = "var(--text-muted)";
+    $("lblMortar").style.color = "var(--text-muted)";
+  }
+
+  updateImpactVisualizer();
+}
+
+function setIndicator(el, inRange) {
+  el.style.color = inRange ? "var(--range-in)" : "var(--range-out)";
+}
+
+/* =========================================================================
+   IMPACT VISUALIZER
+   ========================================================================= */
+function drawLine(ctx, x1, y1, x2, y2, color, width, dash) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.setLineDash(dash || []);
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawText(ctx, x, y, text, color, font, anchor) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.font = font;
+  ctx.textBaseline = "middle";
+  ctx.textAlign = anchor === "w" ? "left" : anchor === "e" ? "right" : "center";
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function drawOval(ctx, x0, y0, x1, y1, fill, outline, width) {
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  const r = Math.abs(x1 - x0) / 2;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (outline) { ctx.strokeStyle = outline; ctx.lineWidth = width || 1; ctx.stroke(); }
+  ctx.restore();
+}
+
+function drawPolygon(ctx, points, fill, outline, width) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(points[0][0], points[0][1]);
+  for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (outline) { ctx.strokeStyle = outline; ctx.lineWidth = width || 1; ctx.stroke(); }
+  ctx.restore();
+}
+
+function updateImpactVisualizer() {
+  const canvas = $("plotCanvas");
+  const ctx = canvas.getContext("2d");
+
+  const cW = canvas.width, cH = canvas.height;
+  ctx.clearRect(0, 0, cW, cH);
+
+  const points = [];
+  const gx = parseFloat(val("gunX")), gy = parseFloat(val("gunY"));
+  if (!isNaN(gx) && !isNaN(gy)) points.push(["gun", gx, gy]);
+
+  let rawTx = parseFloat(val("targetX")), rawTy = parseFloat(val("targetY"));
+  let tx = null, ty = null;
+  if (!isNaN(rawTx) && !isNaN(rawTy)) {
+    tx = rawTx + state.offsetX;
+    ty = rawTy + state.offsetY;
+    points.push(["target", rawTx, rawTy]);
+    points.push(["aim", tx, ty]);
+  } else {
+    rawTx = null; rawTy = null;
+  }
+
+  for (const shot of state.missHistory) points.push(["history_impact", shot.x, shot.y]);
+
+  let ix = parseFloat(val("impactX")), iy = parseFloat(val("impactY"));
+  if (!isNaN(ix) && !isNaN(iy)) {
+    points.push(["current_impact", ix, iy]);
+  } else {
+    ix = null; iy = null;
+  }
+
+  if (isNaN(gx) || isNaN(gy) || tx === null) {
+    drawText(ctx, cW / 2, cH / 2 - 8, "Set Gun & Target", "var-text-muted".startsWith("var") ? "#8289a0" : "", "12px 'Segoe UI'", "center");
+    drawText(ctx, cW / 2, cH / 2 + 8, "coordinates to view plot", "#8289a0", "12px 'Segoe UI'", "center");
+    return;
+  }
+
+  // --- UNIFORM / TRUE 1:1 ASPECT RATIO SCALING ---
+  const allX = points.map((p) => p[1]);
+  const allY = points.map((p) => p[2]);
+
+  let minX = Math.min(...allX), maxX = Math.max(...allX);
+  let minY = Math.min(...allY), maxY = Math.max(...allY);
+
+  let spanX = maxX - minX;
+  let spanY = maxY - minY;
+
+  const minSpan = 0.5;
+  if (spanX < minSpan) {
+    const midX = (minX + maxX) / 2.0;
+    minX = midX - minSpan / 2.0;
+    maxX = midX + minSpan / 2.0;
+    spanX = minSpan;
+  }
+  if (spanY < minSpan) {
+    const midY = (minY + maxY) / 2.0;
+    minY = midY - minSpan / 2.0;
+    maxY = midY + minSpan / 2.0;
+    spanY = minSpan;
+  }
+
+  const margin = 35;
+  const usableW = cW - 2 * margin;
+  const usableH = cH - 2 * margin;
+
+  const scale = Math.min(usableW / spanX, usableH / spanY);
+
+  const centerWorldX = (minX + maxX) / 2.0;
+  const centerWorldY = (minY + maxY) / 2.0;
+  const centerCanvasX = cW / 2.0;
+  const centerCanvasY = cH / 2.0;
+
+  function toCanvas(x, y) {
+    const cx = centerCanvasX + (x - centerWorldX) * scale;
+    const cy = centerCanvasY - (y - centerWorldY) * scale;
+    return [cx, cy];
+  }
+
+  // --- BACKGROUND DISTANCE GRID LINES ---
+  const spanMeters = Math.max(spanX, spanY) * 100.0;
+  const gridStepsM = [10, 25, 50, 100, 250, 500, 1000];
+  let stepM = gridStepsM[0];
+  for (const s of gridStepsM) {
+    if (spanMeters / s <= 7) { stepM = s; break; }
+  }
+  const stepCoord = stepM / 100.0;
+
+  const worldMinX = centerWorldX - (cW / (2.0 * scale));
+  const worldMaxX = centerWorldX + (cW / (2.0 * scale));
+  const worldMinY = centerWorldY - (cH / (2.0 * scale));
+  const worldMaxY = centerWorldY + (cH / (2.0 * scale));
+
+  const startGridX = Math.floor(worldMinX / stepCoord) * stepCoord;
+  const endGridX = Math.ceil(worldMaxX / stepCoord) * stepCoord;
+  const startGridY = Math.floor(worldMinY / stepCoord) * stepCoord;
+  const endGridY = Math.ceil(worldMaxY / stepCoord) * stepCoord;
+
+  for (let currX = startGridX; currX <= endGridX; currX += stepCoord) {
+    const [cx] = toCanvas(currX, 0);
+    if (cx >= 0 && cx <= cW) {
+      drawLine(ctx, cx, 0, cx, cH, "#232633", 1, [2, 4]);
+      drawText(ctx, cx + 2, cH - 8, currX.toFixed(1), "#51576d", "10px 'Segoe UI'", "w");
+    }
+  }
+  for (let currY = startGridY; currY <= endGridY; currY += stepCoord) {
+    const [, cy] = toCanvas(0, currY);
+    if (cy >= 0 && cy <= cH) {
+      drawLine(ctx, 0, cy, cW, cy, "#232633", 1, [2, 4]);
+      drawText(ctx, 4, cy - 6, currY.toFixed(1), "#51576d", "10px 'Segoe UI'", "w");
+    }
+  }
+
+  drawText(ctx, cW - 6, 8, `Grid Step: ${stepM}m (1:1 Scale)`, "#00d2ff", "bold 10px 'Segoe UI'", "e");
+
+  const [cgx, cgy] = toCanvas(gx, gy);
+  const [ctx_, cty] = toCanvas(tx, ty);       
+  const [crtx, crty] = toCanvas(rawTx, rawTy); 
+
+  // Baseline: Firing vector line
+  drawLine(ctx, cgx, cgy, ctx_, cty, "#8289a0", 1.5, [4, 4]);
+
+  // Historical shot miss impacts
+  for (const shot of state.missHistory) {
+    const [cshx, cshy] = toCanvas(shot.x, shot.y);
+    drawLine(ctx, cgx, cgy, cshx, cshy, "#404452", 1, [2, 2]);
+    const r = 5;
+    drawOval(ctx, cshx - r, cshy - r, cshx + r, cshy + r, "#c52828", "#ff8a80", 1);
+    drawText(ctx, cshx, cshy - 10, `#${shot.shot}`, "#ff8a80", "bold 10px 'Segoe UI'", "center");
+  }
+
+  // Current pending impact
+  if (ix !== null && iy !== null) {
+    const [cix, ciy] = toCanvas(ix, iy);
+    drawLine(ctx, cgx, cgy, cix, ciy, "#e1e4ee", 1.5, []);
+    const r = 6;
+    drawOval(ctx, cix - r, ciy - r, cix + r, ciy + r, "#ef4444", "#ffffff", 1.5);
+    drawText(ctx, cix, ciy - 12, "Impact", "#ef4444", "bold 11px 'Segoe UI'", "center");
+  }
+
+  // True Target Marker
+  const tr2 = 5;
+  drawPolygon(
+    ctx,
+    [[crtx, crty - tr2], [crtx + tr2, crty], [crtx, crty + tr2], [crtx - tr2, crty]],
+    "#e14eca", "#f7b3ec", 1.5
+  );
+  drawText(ctx, crtx, crty - 12, "Target", "#e14eca", "bold 11px 'Segoe UI'", "center");
+
+  // Aim Point Marker
+  if (state.offsetX !== 0.0 || state.offsetY !== 0.0) {
+    const tr = 6;
+    drawLine(ctx, ctx_ - tr - 2, cty, ctx_ + tr + 2, cty, "#00d2ff", 2, []);
+    drawLine(ctx, ctx_, cty - tr - 2, ctx_, cty + tr + 2, "#00d2ff", 2, []);
+    drawText(ctx, ctx_, cty + 14, "Aim Point", "#00d2ff", "bold 11px 'Segoe UI'", "center");
+  }
+
+  // Gunner Marker
+  const gr = 6;
+  drawOval(ctx, cgx - gr, cgy - gr, cgx + gr, cgy + gr, "#2e7d32", "#4ade80", 1.5);
+  drawText(ctx, cgx, cgy + 14, "Gunner", "#4ade80", "bold 11px 'Segoe UI'", "center");
+}
+
+function resizeCanvasAndRedraw() {
+  const canvas = $("plotCanvas");
+  const w = canvas.clientWidth || 220;
+  const h = canvas.clientHeight || 230;
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  updateImpactVisualizer();
+}
+
+/* =========================================================================
+   SPOTTER & MISS CORRECTION LOGIC
+   ========================================================================= */
+function applyMissCorrection() {
+  const impX = parseFloat(val("impactX"));
+  const impY = parseFloat(val("impactY"));
+  const tgtX = parseFloat(val("targetX"));
+  const tgtY = parseFloat(val("targetY"));
+
+  if (isNaN(impX) || isNaN(impY) || isNaN(tgtX) || isNaN(tgtY)) {
+    alert("Error\n\nPlease enter valid numerical impact coordinates.");
+    return;
+  }
+
+  if (
+    state.lastAppliedImpact &&
+    state.lastAppliedImpact[0] === impX &&
+    state.lastAppliedImpact[1] === impY
+  ) {
+    alert(
+      "Same Impact Coordinates\n\n" +
+      "These Impact X/Y values were already applied to the last correction. " +
+      "Enter the new shot's impact coordinates before clicking Confirm Miss again."
+    );
+    return;
+  }
+
+  const dx = (impX - tgtX) * 100.0;
+  const dy = (impY - tgtY) * 100.0;
+  const errorDist = Math.hypot(dx, dy);
+
+  state.shotCounter += 1;
+  state.missHistory.push({ shot: state.shotCounter, errorDist, x: impX, y: impY });
+  renderMissLog();
+
+  showMissLog();
+
+  state.offsetX -= impX - tgtX;
+  state.offsetY -= impY - tgtY;
+  state.lastAppliedImpact = [impX, impY];
+
+  updateLiveSolution();
+}
+
+function confirmHit() {
+  state.offsetX = 0.0;
+  state.offsetY = 0.0;
+  state.lastAppliedImpact = null;
+  setVal("targetX", val("impactX"));
+  setVal("targetY", val("impactY"));
+  updateLiveSolution();
+}
+
+function resetCorrections() {
+  state.offsetX = 0.0;
+  state.offsetY = 0.0;
+  state.lastAppliedImpact = null;
+
+  setVal("impactX", "");
+  setVal("impactY", "");
+  setVal("impactPaste", "");
+
+  clearMissLog();
+  hideMissLog();
+
+  updateLiveSolution();
+}
+
+/* =========================================================================
+   WIRING / INITIALIZATION
+   ========================================================================= */
+function registerTraces() {
+  ["gunX", "gunY", "targetX", "targetY", "impactX", "impactY", "aoeDist"].forEach((id) => {
+    $(id).addEventListener("input", updateLiveSolution);
+  });
+
+  $("gunPaste").addEventListener("input", () => applyPasteField("gunPaste"));
+  $("targetPaste").addEventListener("input", () => applyPasteField("targetPaste"));
+  $("impactPaste").addEventListener("input", () => applyPasteField("impactPaste"));
+
+  $("manualModal").addEventListener("click", (e) => {
+    if (e.target.id === "manualModal") closeManualModal();
+  });
+
+  new ResizeObserver(resizeCanvasAndRedraw).observe($("plotWrap"));
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  registerTraces();
+  loadXmlLocations(EMBEDDED_LOCATIONS.slice());
+  renderSavedList();
+  resizeCanvasAndRedraw();
+  updateLiveSolution();
+});
+</script>
+</body>
+</html>
