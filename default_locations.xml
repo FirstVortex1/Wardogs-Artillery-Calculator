@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<default_locations>
+	<location map="Kavkazi" name="Tower 1" x="80.54" y="69.87" />
+	<location map="Kavkazi" name="Tower 2" x="77.23" y="69.97" />
+	<location map="Kavkazi" name="Tower 3" x="77.22" y="73.47" />
+	<location map="Kavkazi" name="Tower 4" x="84.63" y="72.82" />
+	<location map="Kavkazi" name="Tower 5" x="82.25" y="68.39" />
+	<location map="Kavkazi" name="Main Church" x="84.46" y="71.39" />
+	<location map="Kavkazi" name="Small Church" x="79.37" y="67.50" />
+	<location map="Europe" name="Tower 1" x="95.85" y="62.85" />
+	<location map="Europe" name="Tower 2" x="100.36" y="59.25" />
+	<location map="Europe" name="Tower 3" x="104.53" y="63.68" />
+	<location map="Europe" name="Tower 4" x="100.68" y="67.65" />
+	<location map="Europe" name="Church" x="101.23" y="63.00" />
+	<location map="North America" name="Tower 1" x="68.60" y="104.16" />
+	<location map="North America" name="Tower 2" x="72.90" y="105.09" />
+	<location map="North America" name="Tower 3" x="70.18" y="100.18" />
+</default_locations>
